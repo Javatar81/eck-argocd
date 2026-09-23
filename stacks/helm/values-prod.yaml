@@ -29,13 +29,6 @@ eck-elasticsearch:
                 storage: 50Gi
 
 eck-kibana:
-  config:
-    server.publicBaseUrl: https://kibana.example.internal
-  ingress:
-    enabled: true
-    hosts:
-      - host: kibana.example.internal
-        path: /
   podTemplate:
     spec:
       containers:
