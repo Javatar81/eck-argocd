@@ -1,0 +1,31 @@
+# Wave -2. Whitelists the cluster-scoped objects the operator chart installs.
+# Stack Applications use the elastic-stacks project and stay namespaced.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  description: ECK CRDs and operator. One install per cluster, upgraded deliberately.
+  sourceRepos:
+    - https://helm.elastic.co
+    - https://github.com/Javatar81/eck-argocd.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: elastic-system
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+  clusterResourceWhitelist:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

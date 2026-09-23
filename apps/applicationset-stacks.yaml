@@ -1,0 +1,69 @@
+# One Application per environment. valueFiles layer values-common.yaml under
+# values-{{env}}.yaml. There is no staging environment.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: elastic-stacks
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            cluster: https://kubernetes.default.svc
+            namespace: elastic-dev
+          - env: prod
+            cluster: https://kubernetes.default.svc
+            namespace: elastic-prod
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: env
+              operator: In
+              values: [dev]
+        - matchExpressions:
+            - key: env
+              operator: In
+              values: [prod]
+  template:
+    metadata:
+      name: logs-{{env}}
+      labels:
+        env: "{{env}}"
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: elastic-stacks
+      sources:
+        - repoURL: https://helm.elastic.co
+          chart: eck-stack
+          targetRevision: 0.20.0
+          helm:
+            releaseName: logs
+            skipCrds: true
+            valueFiles:
+              - $values/stacks/helm/values-common.yaml
+              - $values/stacks/helm/values-{{env}}.yaml
+        - repoURL: https://github.com/Javatar81/eck-argocd.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: "{{cluster}}"
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 30s
+            factor: 2
+            maxDuration: 5m
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true
+          - SkipDryRunOnMissingResource=true

@@ -1,0 +1,19 @@
+# installCRDs is false because platform/eck-crds owns the CRDs.
+installCRDs: false
+
+# Namespaces this operator instance reconciles. This Application targets the
+# dev cluster (https://kubernetes.default.svc). Install the same chart on the
+# prod cluster with managedNamespaces: [elastic-prod].
+managedNamespaces:
+  - elastic-dev
+
+webhook:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 150Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi

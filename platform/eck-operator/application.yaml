@@ -1,0 +1,48 @@
+# chart: eck-operator  targetRevision: 3.5.0  wave 0
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: platform
+  sources:
+    - repoURL: https://helm.elastic.co
+      chart: eck-operator
+      targetRevision: 3.5.0
+      helm:
+        valueFiles:
+          - $values/platform/eck-operator/values.yaml
+    - repoURL: https://github.com/Javatar81/eck-argocd.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    # ECK rotates the webhook CA at runtime. Self-heal must not wipe it.
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - .webhooks[]?.clientConfig.caBundle
+    # The operator fills this Secret after install.
+    - kind: Secret
+      name: elastic-webhook-server-cert
+      jsonPointers:
+        - /data

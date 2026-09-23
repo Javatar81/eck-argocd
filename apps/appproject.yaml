@@ -1,0 +1,22 @@
+# Wave -2. Stack project is namespaced: no CRDs, no webhook configuration.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: elastic-stacks
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  description: Elasticsearch and Kibana stacks. Promoted dev then prod.
+  sourceRepos:
+    - https://helm.elastic.co
+    - https://github.com/Javatar81/eck-argocd.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: elastic-dev
+    - server: https://kubernetes.default.svc
+      namespace: elastic-prod
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

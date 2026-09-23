@@ -1,0 +1,32 @@
+# chart: eck-operator-crds  targetRevision: 3.5.0  wave -1
+# CRDs only. ServerSideApply avoids the 256KiB last-applied-configuration limit.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: eck-crds
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: platform
+  source:
+    repoURL: https://helm.elastic.co
+    chart: eck-operator-crds
+    targetRevision: 3.5.0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elastic-system
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

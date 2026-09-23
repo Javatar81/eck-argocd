@@ -1,0 +1,60 @@
+# Health Lua and ignoreDifferences for ECK kinds.
+# Yellow counts as Healthy so a one-node dev cluster (always yellow) can
+# satisfy RollingSync before prod starts.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: argocd
+data:
+  resource.customizations.health.elasticsearch.k8s.elastic.co_Elasticsearch: |
+    hs = {}
+    if obj.status == nil then
+      hs.status = "Progressing"
+      hs.message = "Waiting for status"
+      return hs
+    end
+    if obj.status.phase == "Invalid" then
+      hs.status = "Degraded"
+      hs.message = "Spec rejected by ECK"
+      return hs
+    end
+    if obj.status.health == "red" then
+      hs.status = "Degraded"
+    elseif obj.status.phase == "ApplyingChanges" or obj.status.phase == "MigratingData" then
+      hs.status = "Progressing"
+    elseif obj.status.health == "green" or obj.status.health == "yellow" then
+      hs.status = "Healthy"
+    else
+      hs.status = "Progressing"
+    end
+    hs.message = (obj.status.phase or "?") .. " / " .. (obj.status.health or "?")
+    return hs
+  resource.customizations.health.kibana.k8s.elastic.co_Kibana: |
+    hs = {}
+    if obj.status == nil or obj.status.health == nil then
+      hs.status = "Progressing"
+      hs.message = "Waiting for status"
+      return hs
+    end
+    if obj.status.health == "red" then
+      hs.status = "Degraded"
+    elseif obj.status.health == "green" or obj.status.health == "yellow" then
+      hs.status = "Healthy"
+    else
+      hs.status = "Progressing"
+    end
+    hs.message = obj.status.health
+    return hs
+  resource.customizations.ignoreDifferences.elasticsearch.k8s.elastic.co_Elasticsearch: |
+    managedFieldsManagers:
+      - elastic-operator
+    jqPathExpressions:
+      - .metadata.annotations | with_entries(select(.key | startswith("elasticsearch.k8s.elastic.co/")))
+  resource.customizations.ignoreDifferences.kibana.k8s.elastic.co_Kibana: |
+    managedFieldsManagers:
+      - elastic-operator
+    jqPathExpressions:
+      - .metadata.annotations | with_entries(select(.key | startswith("kibana.k8s.elastic.co/")))
