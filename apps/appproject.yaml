@@ -1,4 +1,5 @@
-# Wave -2. Stack project is namespaced: no CRDs, no webhook configuration.
+# Wave -2. Stack project stays off CRDs and webhook config.
+# Namespace is the one cluster resource, required by CreateNamespace=true.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -16,7 +17,9 @@ spec:
       namespace: elastic-dev
     - server: https://kubernetes.default.svc
       namespace: elastic-prod
-  clusterResourceWhitelist: []
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
