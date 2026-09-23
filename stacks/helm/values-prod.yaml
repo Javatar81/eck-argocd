@@ -23,7 +23,7 @@ eck-elasticsearch:
             name: elasticsearch-data
           spec:
             accessModes: [ReadWriteOnce]
-            storageClassName: fast-ssd
+            storageClassName: standard
             resources:
               requests:
                 storage: 50Gi
