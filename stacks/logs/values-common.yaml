@@ -1,6 +1,6 @@
-# Shared stack shape. Helm replaces lists, so nodeSets (count, storage, size)
-# live in values-dev.yaml and values-prod.yaml.
-# Chart version is pinned on the Application (eck-stack 0.17.0). Component
+# Shared shape for the logs stack. Helm replaces lists, so nodeSets (count,
+# storage, size) live in values-dev.yaml and values-prod.yaml.
+# Chart version is pinned on the Application (eck-stack 0.20.0). Component
 # versions are pinned here so a chart bump cannot upgrade Elasticsearch.
 eck-elasticsearch:
   enabled: true

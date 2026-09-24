@@ -14,9 +14,13 @@ spec:
     - https://github.com/Javatar81/eck-argocd.git
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: elastic-dev
+      namespace: elastic-logs-dev
     - server: https://kubernetes.default.svc
-      namespace: elastic-prod
+      namespace: elastic-logs-prod
+    - server: https://kubernetes.default.svc
+      namespace: elastic-search-dev
+    - server: https://kubernetes.default.svc
+      namespace: elastic-search-prod
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace

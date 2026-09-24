@@ -1,0 +1,52 @@
+# Shared shape for the search stack. Helm replaces lists, so nodeSets (count,
+# storage, size) live in values-dev.yaml and values-prod.yaml.
+# Chart version is pinned on the Application (eck-stack 0.20.0). Component
+# versions are pinned here so a chart bump cannot upgrade Elasticsearch.
+eck-elasticsearch:
+  enabled: true
+  fullnameOverride: search
+  version: 9.5.4
+  labels:
+    stack: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,Prune=false
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false
+  updateStrategy:
+    changeBudget:
+      maxUnavailable: 1
+      maxSurge: 1
+  podDisruptionBudget:
+    spec:
+      minAvailable: 1
+
+eck-kibana:
+  enabled: true
+  fullnameOverride: search
+  version: 9.5.4
+  count: 1
+  elasticsearchRef:
+    name: search
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+
+eck-agent:
+  enabled: false
+eck-fleet-server:
+  enabled: false
+eck-beats:
+  enabled: false
+eck-logstash:
+  enabled: false
+eck-apm-server:
+  enabled: false
+eck-enterprise-search:
+  enabled: false
+eck-package-registry:
+  enabled: false
+eck-autoops-agent-policy:
+  enabled: false

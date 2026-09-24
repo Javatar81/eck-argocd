@@ -1,5 +1,5 @@
-# One Application per environment. valueFiles layer values-common.yaml under
-# values-{{env}}.yaml. There is no staging environment.
+# One Application per (stack, env). valueFiles layer values-common.yaml under
+# values-{{env}}.yaml. RollingSync promotes all stacks' dev, then all prod.
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -9,12 +9,18 @@ spec:
   generators:
     - list:
         elements:
-          - env: dev
-            cluster: https://kubernetes.default.svc
-            namespace: elastic-dev
-          - env: prod
-            cluster: https://kubernetes.default.svc
-            namespace: elastic-prod
+          - stack: logs
+            env: dev
+            namespace: elastic-logs-dev
+          - stack: logs
+            env: prod
+            namespace: elastic-logs-prod
+          - stack: search
+            env: dev
+            namespace: elastic-search-dev
+          - stack: search
+            env: prod
+            namespace: elastic-search-prod
   strategy:
     type: RollingSync
     rollingSync:
@@ -29,9 +35,10 @@ spec:
               values: [prod]
   template:
     metadata:
-      name: logs-{{env}}
+      name: "{{stack}}-{{env}}"
       labels:
         env: "{{env}}"
+        stack: "{{stack}}"
       annotations:
         argocd.argoproj.io/sync-wave: "1"
     spec:
@@ -41,16 +48,16 @@ spec:
           chart: eck-stack
           targetRevision: 0.20.0
           helm:
-            releaseName: logs
+            releaseName: "{{stack}}"
             skipCrds: true
             valueFiles:
-              - $values/stacks/helm/values-common.yaml
-              - $values/stacks/helm/values-{{env}}.yaml
+              - $values/stacks/{{stack}}/values-common.yaml
+              - $values/stacks/{{stack}}/values-{{env}}.yaml
         - repoURL: https://github.com/Javatar81/eck-argocd.git
           targetRevision: main
           ref: values
       destination:
-        server: "{{cluster}}"
+        server: https://kubernetes.default.svc
         namespace: "{{namespace}}"
       syncPolicy:
         automated:

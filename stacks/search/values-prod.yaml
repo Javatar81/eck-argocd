@@ -1,0 +1,41 @@
+# Prod: two Elasticsearch nodes plus Kibana.
+# Both nodes are master-eligible. Losing either node drops the cluster below
+# quorum until it returns.
+eck-elasticsearch:
+  volumeClaimDeletePolicy: DeleteOnScaledownOnly
+  nodeSets:
+    - name: default
+      count: 2
+      config:
+        node.roles: [master, data_hot, data_content, ingest]
+      podTemplate:
+        spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: 4Gi
+                limits:
+                  memory: 4Gi
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes: [ReadWriteOnce]
+            storageClassName: standard
+            resources:
+              requests:
+                storage: 50Gi
+
+eck-kibana:
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              memory: 2Gi

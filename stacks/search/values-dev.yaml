@@ -1,0 +1,43 @@
+# Dev: one Elasticsearch node plus Kibana.
+# A single master-eligible data node is always yellow. The health Lua treats
+# yellow as Healthy so RollingSync can move on to prod.
+eck-elasticsearch:
+  volumeClaimDeletePolicy: DeleteOnScaledownAndClusterDeletion
+  podDisruptionBudget:
+    disabled: true
+  nodeSets:
+    - name: default
+      count: 1
+      config:
+        node.roles: [master, data_hot, data_content, ingest]
+        node.store.allow_mmap: false
+      podTemplate:
+        spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 2Gi
+                limits:
+                  memory: 2Gi
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes: [ReadWriteOnce]
+            resources:
+              requests:
+                storage: 10Gi
+
+eck-kibana:
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 250m
+              memory: 2Gi
+            limits:
+              memory: 2Gi

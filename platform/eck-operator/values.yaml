@@ -1,10 +1,13 @@
 # installCRDs is false because platform/eck-crds owns the CRDs.
 installCRDs: false
 
-# Both stages run on this cluster. The operator ignores any namespace not listed here.
+# One namespace per (stack, env). The operator ignores any namespace not listed here.
 managedNamespaces:
-  - elastic-dev
-  - elastic-prod
+  - elastic-logs-dev
+  - elastic-logs-prod
+  - elastic-search-dev
+  - elastic-search-prod
+
 
 webhook:
   enabled: true
